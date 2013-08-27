@@ -30,7 +30,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "linphone/sipsetup.h"
 #endif
 
-#define LINPHONE_IPADDR_SIZE 64
+#define LINPHONE_IPADDR_SIZE 128
 #define LINPHONE_HOSTNAME_SIZE 128
 
 #ifndef LINPHONE_PUBLIC
@@ -129,14 +129,16 @@ typedef struct _LinphoneCall LinphoneCall;
 enum _LinphoneReason{
 	LinphoneReasonNone,
 	LinphoneReasonNoResponse, /**<No response received from remote*/
-	LinphoneReasonBadCredentials, /**<Authentication failed due to bad or missing credentials*/
+	LinphoneReasonBadCredentials, /**<Authentication failed due to bad*/
 	LinphoneReasonDeclined, /**<The call has been declined*/
 	LinphoneReasonNotFound, /**<Destination of the calls was not found.*/
 	LinphoneReasonNotAnswered, /**<The call was not answered in time*/
 	LinphoneReasonBusy, /**<Phone line was busy */
 	LinphoneReasonMedia, /**<Incompatible media */
 	LinphoneReasonIOError, /**<Transport error: connection failures, disconnections etc...*/
-	LinphoneReasonDoNotDisturb /**<Do not disturb reason*/
+	LinphoneReasonDoNotDisturb, /**<Do not disturb reason*/
+	LinphoneReasonUnauthorized /**<Operation is unauthorized because missing credential*/
+
 };
 
 /**

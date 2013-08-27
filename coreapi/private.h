@@ -33,6 +33,7 @@ extern "C" {
 #include "linphonecore_utils.h"
 #include "sal/sal.h"
 #include "sipsetup.h"
+#include "Xsocket.h"
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -256,7 +257,7 @@ LinphoneFriend *linphone_find_friend_by_inc_subscribe(MSList *l, SalOp *op);
 LinphoneFriend *linphone_find_friend_by_out_subscribe(MSList *l, SalOp *op);
 MSList *linphone_find_friend_by_addr(MSList *fl, const LinphoneAddress *addr, LinphoneFriend **lf);
 
-int parse_hostname_to_addr(const char *server, struct sockaddr_storage *ss, socklen_t *socklen);
+int parse_hostname_to_addr(const char *server, sockaddr_x *ss, socklen_t *socklen);
 int set_lock_file();
 int get_lock_file();
 int remove_lock_file();

@@ -18,6 +18,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
+#include "Xsocket.h"
+
 #include "private.h"
 #include "lpconfig.h"
 #include "mediastreamer2/mediastream.h"
@@ -424,8 +426,8 @@ static int sendStunRequest(int sock, const struct sockaddr *server, socklen_t ad
 	return 0;
 }
 
-int parse_hostname_to_addr(const char *server, struct sockaddr_storage *ss, socklen_t *socklen){
-	struct addrinfo hints,*res=NULL;
+int parse_hostname_to_addr(const char *server, sockaddr_x *ss, socklen_t *socklen){
+/*	struct addrinfo hints,*res=NULL;
 	int family = PF_INET;
 	int port_int = 3478;
 	int ret;
@@ -450,16 +452,18 @@ int parse_hostname_to_addr(const char *server, struct sockaddr_storage *ss, sock
 	memset(&hints,0,sizeof(hints));
 	hints.ai_family=family;
 	hints.ai_socktype=SOCK_DGRAM;
-	hints.ai_protocol=IPPROTO_UDP;
-	ret=getaddrinfo(host,port,&hints,&res);
+	hints.ai_protocol=IPPROTO_UDP; */
+	int ret;
+	struct addrinfo *res=NULL;
+	ret=Xgetaddrinfo(server,NULL,NULL,&res);
 	if (ret!=0){
-		ms_error("getaddrinfo() failed for %s:%s : %s",host,port,gai_strerror(ret));
+/*		ms_error("getaddrinfo() failed for %s:%s : %s",host,port,gai_strerror(ret)); */
 		return -1;
 	}
 	if (!res) return -1;
 	memcpy(ss,res->ai_addr,res->ai_addrlen);
 	*socklen=res->ai_addrlen;
-	freeaddrinfo(res);
+	Xfreeaddrinfo(res);
 	return 0;
 }
 
@@ -495,7 +499,7 @@ int linphone_core_run_stun_tests(LinphoneCore *lc, LinphoneCall *call){
 		return -1;
 	}
 	if (server!=NULL){
-		struct sockaddr_storage ss;
+		sockaddr_x ss;
 		socklen_t ss_len;
 		ortp_socket_t sock1=-1, sock2=-1;
 		int loops=0;
@@ -621,7 +625,7 @@ void linphone_core_adapt_to_network(LinphoneCore *lc, int ping_time_ms, Linphone
 int linphone_core_gather_ice_candidates(LinphoneCore *lc, LinphoneCall *call)
 {
 	char local_addr[64];
-	struct sockaddr_storage ss;
+	sockaddr_x ss;
 	socklen_t ss_len;
 	IceCheckList *audio_check_list;
 	IceCheckList *video_check_list;
@@ -663,7 +667,7 @@ int linphone_core_gather_ice_candidates(LinphoneCore *lc, LinphoneCall *call)
 
 	ms_message("ICE: gathering candidate from [%s]",server);
 	/* Gather local srflx candidates. */
-	ice_session_gather_candidates(call->ice_session, ss, ss_len);
+	/* ice_session_gather_candidates(call->ice_session, ss, ss_len); */
 	return 0;
 }
 
@@ -1023,136 +1027,23 @@ unsigned int linphone_core_get_audio_features(LinphoneCore *lc){
 bool_t linphone_core_tone_indications_enabled(LinphoneCore*lc){
 	return lp_config_get_int(lc->config,"sound","tone_indications",1);
 }
-
-#ifdef HAVE_GETIFADDRS
-
-#include <ifaddrs.h>
-static int get_local_ip_with_getifaddrs(int type, char *address, int size)
-{
-	struct ifaddrs *ifp;
-	struct ifaddrs *ifpstart;
-	int ret = 0;
-
-	if (getifaddrs(&ifpstart) < 0) {
-		return -1;
-	}
-#ifndef __linux
-	#define UP_FLAG IFF_UP /* interface is up */
-#else
-	#define UP_FLAG IFF_RUNNING /* resources allocated */
-#endif
-	
-	for (ifp = ifpstart; ifp != NULL; ifp = ifp->ifa_next) {
-		if (ifp->ifa_addr && ifp->ifa_addr->sa_family == type
-			&& (ifp->ifa_flags & UP_FLAG) && !(ifp->ifa_flags & IFF_LOOPBACK))
-		{
-			if(getnameinfo(ifp->ifa_addr,
-						(type == AF_INET6) ?
-						sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in),
-						address, size, NULL, 0, NI_NUMERICHOST) == 0) {
-				if (strchr(address, '%') == NULL) {	/*avoid ipv6 link-local addresses */
-					/*ms_message("getifaddrs() found %s",address);*/
-					ret++;
-					break;
-				}
-			}
-		}
-	}
-	freeifaddrs(ifpstart);
-	return ret;
-}
-#endif
-
-
-static int get_local_ip_for_with_connect(int type, const char *dest, char *result){
-	int err,tmp;
-	struct addrinfo hints;
+int linphone_core_get_local_ip_for(int type, const char *dest, char *result){
+	struct addrinfo hints={0};
 	struct addrinfo *res=NULL;
-	struct sockaddr_storage addr;
-	struct sockaddr *p_addr=(struct sockaddr*)&addr;
-	ortp_socket_t sock;
 	socklen_t s;
-
-	memset(&hints,0,sizeof(hints));
-	hints.ai_family=(type==AF_INET6) ? PF_INET6 : PF_INET;
-	hints.ai_socktype=SOCK_DGRAM;
-	/*hints.ai_flags=AI_NUMERICHOST|AI_CANONNAME;*/
-	err=getaddrinfo(dest,"5060",&hints,&res);
+	int err;
+	hints.ai_flags = AI_PASSIVE;
+	hints.ai_family = AF_XIA;
+	err=Xgetaddrinfo(NULL, NULL, &hints, &res);
 	if (err!=0){
 		ms_error("getaddrinfo() error: %s",gai_strerror(err));
 		return -1;
-	}
-	if (res==NULL){
-		ms_error("bug: getaddrinfo returned nothing.");
-		return -1;
-	}
-	sock=socket(res->ai_family,SOCK_DGRAM,0);
-	tmp=1;
-	err=setsockopt(sock,SOL_SOCKET,SO_REUSEADDR,(SOCKET_OPTION_VALUE)&tmp,sizeof(int));
-	if (err<0){
-		ms_warning("Error in setsockopt: %s",strerror(errno));
-	}
-	err=connect(sock,res->ai_addr,res->ai_addrlen);
-	if (err<0) {
-		ms_error("Error in connect: %s",strerror(errno));
- 		freeaddrinfo(res);
- 		close_socket(sock);
-		return -1;
-	}
-	freeaddrinfo(res);
-	res=NULL;
-	s=sizeof(addr);
-	err=getsockname(sock,(struct sockaddr*)&addr,&s);
-	if (err!=0) {
-		ms_error("Error in getsockname: %s",strerror(errno));
-		close_socket(sock);
-		return -1;
-	}
-	if (p_addr->sa_family==AF_INET){
-		struct sockaddr_in *p_sin=(struct sockaddr_in*)p_addr;
-		if (p_sin->sin_addr.s_addr==0){
-			close_socket(sock);
-			return -1;
-		}
-	}
-	err=getnameinfo((struct sockaddr *)&addr,s,result,LINPHONE_IPADDR_SIZE,NULL,0,NI_NUMERICHOST);
-	if (err!=0){
-		ms_error("getnameinfo error: %s",strerror(errno));
-	}
-	close_socket(sock);
-
-
-	return 0;
-}
-
-int linphone_core_get_local_ip_for(int type, const char *dest, char *result){
-	int err;
-        strcpy(result,type==AF_INET ? "127.0.0.1" : "::1");
-	
-	if (dest==NULL){
-		if (type==AF_INET)
-			dest="87.98.157.38"; /*a public IP address*/
-		else dest="2a00:1450:8002::68";
-	}
-        err=get_local_ip_for_with_connect(type,dest,result);
-	if (err==0) return 0;
-	
-	/* if the connect method failed, which happens when no default route is set, 
-	 * try to find 'the' running interface with getifaddrs*/
-	
-#ifdef HAVE_GETIFADDRS
-	/*we use getifaddrs for lookup of default interface */
-	int found_ifs;
-
-	found_ifs=get_local_ip_with_getifaddrs(type,result,LINPHONE_IPADDR_SIZE);
-	if (found_ifs==1){
-		return 0;
-	}else if (found_ifs<=0){
-		/*absolutely no network on this machine */
-		return -1;
-	}
-#endif
-      return 0;  
+	} 
+	s=sizeof(sockaddr_x);
+	err=Xgetnameinfo(res->ai_addr,s,result,LINPHONE_IPADDR_SIZE,NULL,0,NI_NUMERICHOST);
+//	printf("getnameinfo: %s\n", result);
+	Xfreeaddrinfo(res);
+    return 0;  
 }
 
 
@@ -1181,6 +1072,8 @@ SalReason linphone_reason_to_sal(LinphoneReason reason){
 			return SalReasonServiceUnavailable;
 		case LinphoneReasonDoNotDisturb:
 			return SalReasonDoNotDisturb;
+		case LinphoneReasonUnauthorized:
+			return SalReasonUnauthorized;
 	}
 	return SalReasonUnknown;
 }
@@ -1221,6 +1114,9 @@ LinphoneReason linphone_reason_from_sal(SalReason r){
 		case SalReasonRequestPending:
 			ret=LinphoneReasonNone;
 			break;
+		case SalReasonUnauthorized:
+			ret=LinphoneReasonUnauthorized;
+		break;
 	}
 	return ret;
 }

@@ -19,6 +19,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #define _GNU_SOURCE
 
+#include "Xsocket.h"
 #include "linphonecore.h"
 #include "sipsetup.h"
 #include "lpconfig.h"
@@ -1411,6 +1412,8 @@ const MSList *linphone_core_get_video_codecs(const LinphoneCore *lc)
 	return lc->codecs_conf.video_codecs;
 }
 
+LinphoneAddress *ctt;
+
 /**
  * Sets the local "from" identity.
  *
@@ -1420,19 +1423,31 @@ const MSList *linphone_core_get_video_codecs(const LinphoneCore *lc)
 **/
 int linphone_core_set_primary_contact(LinphoneCore *lc, const char *contact)
 {
-	LinphoneAddress *ctt;
-
 	if ((ctt=linphone_address_new(contact))==0) {
 		ms_error("Bad contact url: %s",contact);
 		return -1;
 	}
+	char xia_name[100];
+	const char *nm=linphone_address_get_username(ctt);
+	sprintf(xia_name, "sip_x.%s.aaa.xia", nm);
+	printf("xia_name:%s\n", xia_name);
+        struct addrinfo hints={0};
+        struct addrinfo *res=NULL;
+        hints.ai_flags = AI_PASSIVE;
+        hints.ai_family = AF_XIA;
+        Xgetaddrinfo(NULL, NULL, &hints, &res);
+	sockaddr_x *sa=(sockaddr_x *)(res->ai_addr);
+	XregisterName(xia_name, sa);
+	Xfreeaddrinfo(res);
+	
+	linphone_address_set_domain(ctt, xia_name);
 	if (lc->sip_conf.contact!=NULL) ms_free(lc->sip_conf.contact);
 	lc->sip_conf.contact=ms_strdup(contact);
 	if (lc->sip_conf.guessed_contact!=NULL){
 		ms_free(lc->sip_conf.guessed_contact);
 		lc->sip_conf.guessed_contact=NULL;
 	}
-	linphone_address_destroy(ctt);
+//	linphone_address_destroy(ctt);
 	return 0;
 }
 
@@ -1460,7 +1475,7 @@ void linphone_core_get_local_ip(LinphoneCore *lc, const char *dest, char *result
 }
 
 static void update_primary_contact(LinphoneCore *lc){
-	char *guessed=NULL;
+/*	char *guessed=NULL;
 	char tmp[LINPHONE_IPADDR_SIZE];
 
 	LinphoneAddress *url;
@@ -1482,7 +1497,8 @@ static void update_primary_contact(LinphoneCore *lc){
 	linphone_address_set_port_int(url,linphone_core_get_sip_port (lc));
 	guessed=linphone_address_as_string(url);
 	lc->sip_conf.guessed_contact=guessed;
-	linphone_address_destroy(url);
+	linphone_address_destroy(url);*/
+	lc->sip_conf.guessed_contact=linphone_address_as_string(ctt);
 }
 
 /**
@@ -4436,7 +4452,8 @@ const char *linphone_core_get_nat_address(const LinphoneCore *lc) {
 
 const char *linphone_core_get_nat_address_resolved(LinphoneCore *lc)
 {
-	struct sockaddr_storage ss;
+/*
+	sockaddr_x ss;
 	socklen_t ss_len;
 	int error;
 	char ipstring [INET6_ADDRSTRLEN];
@@ -4447,7 +4464,7 @@ const char *linphone_core_get_nat_address_resolved(LinphoneCore *lc)
 		return lc->net_conf.nat_address;
 	}
 
-	error = getnameinfo((struct sockaddr *)&ss, ss_len,
+	error = Xgetnameinfo((struct sockaddr *)&ss, ss_len,
 		ipstring, sizeof(ipstring), NULL, 0, NI_NUMERICHOST);
 	if (error) {
 		return lc->net_conf.nat_address;
@@ -4457,7 +4474,8 @@ const char *linphone_core_get_nat_address_resolved(LinphoneCore *lc)
 		ms_free(lc->net_conf.nat_address_ip);
 	}
 	lc->net_conf.nat_address_ip = ms_strdup (ipstring);
-	return lc->net_conf.nat_address_ip;
+	return lc->net_conf.nat_address_ip;*/
+	return 0;
 }
 
 void linphone_core_set_firewall_policy(LinphoneCore *lc, LinphoneFirewallPolicy pol){
@@ -5787,6 +5805,8 @@ const char *linphone_reason_to_string(LinphoneReason err){
 			return "IO error";
 		case LinphoneReasonDoNotDisturb:
 			return "Do not distrub";
+		case LinphoneReasonUnauthorized:
+					return "Unauthorized";
 	}
 	return "unknown error";
 }
