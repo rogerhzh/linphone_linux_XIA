@@ -1413,6 +1413,7 @@ const MSList *linphone_core_get_video_codecs(const LinphoneCore *lc)
 }
 
 LinphoneAddress *ctt;
+char dag[128];
 
 /**
  * Sets the local "from" identity.
@@ -1429,7 +1430,7 @@ int linphone_core_set_primary_contact(LinphoneCore *lc, const char *contact)
 	}
 	char xia_name[100];
 	const char *nm=linphone_address_get_username(ctt);
-	sprintf(xia_name, "sip_x.%s.aaa.xia", nm);
+	sprintf(xia_name, "%s.aaa.xia", nm);
 	printf("xia_name:%s\n", xia_name);
         struct addrinfo hints={0};
         struct addrinfo *res=NULL;
@@ -1438,6 +1439,8 @@ int linphone_core_set_primary_contact(LinphoneCore *lc, const char *contact)
         Xgetaddrinfo(NULL, NULL, &hints, &res);
 	sockaddr_x *sa=(sockaddr_x *)(res->ai_addr);
 	XregisterName(xia_name, sa);
+	Xgetnameinfo((struct sockaddr *)sa, sizeof(sockaddr_x), dag, 127, NULL, 0, 0);
+	printf("DAG:%s\n", dag); 
 	Xfreeaddrinfo(res);
 	
 	linphone_address_set_domain(ctt, xia_name);
