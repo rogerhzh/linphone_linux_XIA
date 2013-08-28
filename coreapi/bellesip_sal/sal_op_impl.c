@@ -241,6 +241,7 @@ static int _sal_op_send_request_with_contact(SalOp* op, belle_sip_request_t* req
 			}
 			belle_sip_uri_fix(next_hop_uri);
 		}
+		printf("transport: %s\n", transport);
 		if ((strcmp(method,"REGISTER")==0 || strcmp(method,"SUBSCRIBE")==0) && transport && 
 			(strcasecmp(transport,"TCP")==0 || strcasecmp(transport,"TLS")==0)){
 			/*RFC 5923: add 'alias' parameter to tell the server that we want it to keep the connection for future requests*/
@@ -294,7 +295,6 @@ int sal_op_send_request(SalOp* op, belle_sip_request_t* request)  {
 			||strcmp(belle_sip_request_get_method(request),"OPTIONS")==0
 			||strcmp(belle_sip_request_get_method(request),"REFER")==0) /* Despite contact seems not mandatory, call flow example show a Contact in REFER requests*/
 		need_contact=TRUE;
-
 	return _sal_op_send_request_with_contact(op, request,need_contact);
 }
 

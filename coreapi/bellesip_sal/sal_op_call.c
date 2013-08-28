@@ -549,6 +549,7 @@ int sal_call(SalOp *op, const char *from, const char *to){
 	if (op->referred_by)
 		belle_sip_message_add_header(BELLE_SIP_MESSAGE(invite),BELLE_SIP_HEADER(op->referred_by));
 	
+	printf("msg:%s\n", belle_sip_message_to_string(BELLE_SIP_MESSAGE(invite)));
 	return sal_op_send_request(op,invite);
 }
 

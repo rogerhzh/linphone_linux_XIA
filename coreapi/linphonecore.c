@@ -1892,7 +1892,7 @@ static int apply_transports(LinphoneCore *lc){
 	if (lc->sip_conf.ipv6_enabled)
 		anyaddr="::0";
 	else
-		anyaddr="0.0.0.0";
+		anyaddr="roger.aaa.xia";
 
 	sal_unlisten_ports(sal);
 	if (tr->udp_port>0){
@@ -2513,6 +2513,7 @@ int linphone_core_start_invite(LinphoneCore *lc, LinphoneCall *call){
 	real_url=linphone_address_as_string(call->log->to);
 	from=linphone_address_as_string(call->log->from);
 	err=sal_call(call->op,from,real_url);
+	printf("err:%d \n", err);
 	call->log->call_id=ms_strdup(sal_op_get_call_id(call->op)); /*must be known at that time*/
 
 	if (lc->sip_conf.sdp_200_ack){
