@@ -2518,7 +2518,6 @@ int linphone_core_start_invite(LinphoneCore *lc, LinphoneCall *call){
 	real_url=linphone_address_as_string(call->log->to);
 	from=linphone_address_as_string(call->log->from);
 	err=sal_call(call->op,from,real_url);
-	printf("err:%d \n", err);
 	call->log->call_id=ms_strdup(sal_op_get_call_id(call->op)); /*must be known at that time*/
 
 	if (lc->sip_conf.sdp_200_ack){
@@ -2842,7 +2841,7 @@ void linphone_core_notify_incoming_call(LinphoneCore *lc, LinphoneCall *call){
 	SalMediaDescription *md;
 	bool_t propose_early_media=lp_config_get_int(lc->config,"sip","incoming_calls_early_media",FALSE);
 	const char *ringback_tone=linphone_core_get_remote_ringback_tone (lc);
-
+	printf("2845\n");
 	linphone_call_make_local_media_description(lc,call);
 	sal_call_set_local_media_description(call->op,call->localdesc);
 	md=sal_call_get_final_media_description(call->op);
