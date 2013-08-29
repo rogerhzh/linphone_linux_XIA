@@ -241,7 +241,7 @@ static int _sal_op_send_request_with_contact(SalOp* op, belle_sip_request_t* req
 			}
 			belle_sip_uri_fix(next_hop_uri);
 		}
-		printf("transport: %s\n", transport);
+		printf("next hop uri: %s\n", belle_sip_uri_get_host(next_hop_uri));
 		if ((strcmp(method,"REGISTER")==0 || strcmp(method,"SUBSCRIBE")==0) && transport && 
 			(strcasecmp(transport,"TCP")==0 || strcasecmp(transport,"TLS")==0)){
 			/*RFC 5923: add 'alias' parameter to tell the server that we want it to keep the connection for future requests*/
@@ -249,7 +249,6 @@ static int _sal_op_send_request_with_contact(SalOp* op, belle_sip_request_t* req
 			belle_sip_parameters_set_parameter(BELLE_SIP_PARAMETERS(via),"alias",NULL);
 		}
 	}
-
 	client_transaction = belle_sip_provider_create_client_transaction(prov,request);
 	belle_sip_transaction_set_application_data(BELLE_SIP_TRANSACTION(client_transaction),sal_op_ref(op));
 	if (op->pending_client_trans) belle_sip_object_unref(op->pending_client_trans);
@@ -274,7 +273,6 @@ static int _sal_op_send_request_with_contact(SalOp* op, belle_sip_request_t* req
 	if (result == 0 && !op->base.call_id) {
 		op->base.call_id=ms_strdup(belle_sip_header_call_id_get_call_id(BELLE_SIP_HEADER_CALL_ID(belle_sip_message_get_header_by_type(BELLE_SIP_MESSAGE(request), belle_sip_header_call_id_t))));
 	}
-	
 	return result;
 
 }

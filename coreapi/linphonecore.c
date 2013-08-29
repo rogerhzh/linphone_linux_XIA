@@ -1439,6 +1439,7 @@ int linphone_core_set_primary_contact(LinphoneCore *lc, const char *contact)
         Xgetaddrinfo(NULL, NULL, &hints, &res);
 	sockaddr_x *sa=(sockaddr_x *)(res->ai_addr);
 	XregisterName(xia_name, sa);
+	Xgetaddrinfo(xia_name, NULL, NULL, &res);
 	Xgetnameinfo((struct sockaddr *)sa, sizeof(sockaddr_x), dag, 127, NULL, 0, 0);
 	printf("DAG:%s\n", dag); 
 	Xfreeaddrinfo(res);
@@ -1895,7 +1896,7 @@ static int apply_transports(LinphoneCore *lc){
 		anyaddr="roger.aaa.xia";
 
 	sal_unlisten_ports(sal);
-	if (tr->udp_port>0){
+/*	if (tr->udp_port>0){
 		if (sal_listen_port (sal,anyaddr,tr->udp_port,SalTransportUDP,FALSE)!=0){
 			transport_error(lc,"udp",tr->udp_port);
 			return -1;
@@ -1911,7 +1912,11 @@ static int apply_transports(LinphoneCore *lc){
 			transport_error(lc,"tls",tr->tls_port);
 		}
 	}
-
+	*/
+		if (sal_listen_port (sal,anyaddr,tr->udp_port,SalTransportUDP,FALSE)!=0){
+			transport_error(lc,"udp",tr->udp_port);
+			return -1;
+		}	
 	apply_user_agent(lc);
 
 	return 0;
