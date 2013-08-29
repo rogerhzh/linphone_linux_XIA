@@ -254,7 +254,6 @@ static int _sal_op_send_request_with_contact(SalOp* op, belle_sip_request_t* req
 	if (op->pending_client_trans) belle_sip_object_unref(op->pending_client_trans);
 	op->pending_client_trans=client_transaction; /*update pending inv for being able to cancel*/
 	belle_sip_object_ref(op->pending_client_trans);
-
 	if (belle_sip_message_get_header_by_type(BELLE_SIP_MESSAGE(request),belle_sip_header_user_agent_t)==NULL)
 		belle_sip_message_add_header(BELLE_SIP_MESSAGE(request),BELLE_SIP_HEADER(op->base.root->user_agent));
 
@@ -268,7 +267,6 @@ static int _sal_op_send_request_with_contact(SalOp* op, belle_sip_request_t* req
 		belle_sip_provider_add_authorization(op->base.root->prov,request,NULL,NULL);
 	}
 	result = belle_sip_client_transaction_send_request_to(client_transaction,outbound_proxy/*might be null*/);
-	
 	/*update call id if not set yet for this OP*/
 	if (result == 0 && !op->base.call_id) {
 		op->base.call_id=ms_strdup(belle_sip_header_call_id_get_call_id(BELLE_SIP_HEADER_CALL_ID(belle_sip_message_get_header_by_type(BELLE_SIP_MESSAGE(request), belle_sip_header_call_id_t))));
