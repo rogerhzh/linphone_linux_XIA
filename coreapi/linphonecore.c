@@ -1893,7 +1893,7 @@ static int apply_transports(LinphoneCore *lc){
 	if (lc->sip_conf.ipv6_enabled)
 		anyaddr="::0";
 	else
-		anyaddr="roger.aaa.xia";
+		anyaddr="megrez.aaa.xia";
 
 	sal_unlisten_ports(sal);
 /*	if (tr->udp_port>0){
