@@ -170,8 +170,8 @@ typedef struct SalStreamDescription{
 	SalMediaProto proto;
 	SalStreamType type;
 	char typeother[32];
-	char rtp_addr[64];
-	char rtcp_addr[64];
+	char rtp_addr[128];
+	char rtcp_addr[128];
 	int rtp_port;
 	int rtcp_port;
 	MSList *payloads; //<list of PayloadType
@@ -193,8 +193,8 @@ typedef struct SalStreamDescription{
 
 typedef struct SalMediaDescription{
 	int refcount;
-	char addr[64];
-	char username[64];
+	char addr[128];
+	char username[128];
 	int n_active_streams;
 	int n_total_streams;
 	int bandwidth;
