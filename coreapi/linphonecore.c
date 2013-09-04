@@ -660,8 +660,6 @@ static void sip_config_read(LinphoneCore *lc)
 	linphone_core_verify_server_cn(lc,lp_config_get_int(lc->config,"sip","verify_server_cn",TRUE));
 	/*setting the dscp must be done before starting the transports, otherwise it is not taken into effect*/
 	sal_set_dscp(lc->sal,linphone_core_get_sip_dscp(lc));
-	/*start listening on ports*/
- 	linphone_core_set_sip_transports(lc,&tr);
 
 	tmpstr=lp_config_get_string(lc->config,"sip","contact",NULL);
 	if (tmpstr==NULL || linphone_core_set_primary_contact(lc,tmpstr)==-1) {
@@ -682,6 +680,8 @@ static void sip_config_read(LinphoneCore *lc)
 		ms_free(contact);
 	}
 
+	/*start listening on ports*/
+ 	linphone_core_set_sip_transports(lc,&tr);
 	tmp=lp_config_get_int(lc->config,"sip","guess_hostname",1);
 	linphone_core_set_guess_hostname(lc,tmp);
 
@@ -1414,6 +1414,7 @@ const MSList *linphone_core_get_video_codecs(const LinphoneCore *lc)
 
 LinphoneAddress *ctt;
 char dag[128];
+char xia_name[100];
 
 /**
  * Sets the local "from" identity.
@@ -1428,7 +1429,6 @@ int linphone_core_set_primary_contact(LinphoneCore *lc, const char *contact)
 		ms_error("Bad contact url: %s",contact);
 		return -1;
 	}
-	char xia_name[100];
 	const char *nm=linphone_address_get_username(ctt);
 	sprintf(xia_name, "%s.aaa.xia", nm);
 	printf("xia_name:%s\n", xia_name);
@@ -1893,7 +1893,7 @@ static int apply_transports(LinphoneCore *lc){
 	if (lc->sip_conf.ipv6_enabled)
 		anyaddr="::0";
 	else
-		anyaddr="megrez.aaa.xia";
+		anyaddr=xia_name;
 
 	sal_unlisten_ports(sal);
 /*	if (tr->udp_port>0){
